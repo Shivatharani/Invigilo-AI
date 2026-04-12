@@ -49,14 +49,27 @@ def get_dashboard_stats():
     for s in recent_sessions_cur:
         s["_id"] = str(s["_id"])
         recent_sessions.append(s)
-        
+
+    # Collect scoring data for the chart from completed sessions
+    scored_sessions = list(sessions_collection.find({"status": "completed", "score": {"$exists": True}}).sort("end_time", -1).limit(20))
+    score_history = []
+    
+    # Reverse so oldest is first for the chart (left to right)
+    for s in reversed(scored_sessions):
+        percent = int((s.get("score", 0) / max(s.get("total_questions", 1), 1)) * 100)
+        score_history.append({
+            "name": f"SS{s.get('session_id', 'unknown')[:4].upper()}",
+            "score": percent
+        })
+
     return {
         "total_students": total_students,
         "total_sessions": total_sessions,
         "active_sessions": active_sessions,
         "total_alerts": total_alerts,
         "violation_chart_data": chart_data,
-        "recent_sessions": recent_sessions
+        "recent_sessions": recent_sessions,
+        "score_history": score_history
     }
 
 @router.get("/student/{username}/activities")

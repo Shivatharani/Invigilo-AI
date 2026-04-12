@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import session_routes, analysis_routes, report_routes, auth_routes, admin_routes
+from routes import session_routes, analysis_routes, report_routes, auth_routes, admin_routes, question_routes
 
 app = FastAPI(title="Smart Exam Malpractice Detection API")
 
@@ -17,3 +17,5 @@ app.include_router(analysis_routes.router)
 app.include_router(report_routes.router)
 app.include_router(auth_routes.router)
 app.include_router(admin_routes.router)
+app.include_router(question_routes.router)
+

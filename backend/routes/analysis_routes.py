@@ -86,23 +86,51 @@ class BrowserEventReq(BaseModel):
 
 @router.post("/log-event")
 async def log_event(req: BrowserEventReq):
-    # Assign risk based on event type
-    risk_score = 80
-    if req.event_type in ["Exited Fullscreen", "Tab Switched", "Window Lost Focus"]:
-        risk_score = 65
-    elif req.event_type in ["Copy Attempt", "Paste Attempt", "Right Click Attempt"]:
-        risk_score = 50
-    elif req.event_type == "Audio Violation: Speech Detected":
-        risk_score = 85
+    # Assign risk increment based on event type
+    risk_increment = 0
+    if req.event_type == "TAB_SWITCH":
+        risk_increment = 10
+    elif req.event_type == "EXIT_FULLSCREEN":
+        risk_increment = 15
+    elif req.event_type in ["COPY_ATTEMPT", "PASTE_ATTEMPT"]:
+        risk_increment = 5
+    elif req.event_type == "WINDOW_BLUR":
+        risk_increment = 5
+    elif req.event_type == "SHORTCUT_ATTEMPT":
+        risk_increment = 10
+    elif req.event_type == "MULTIPLE_DISPLAY_DETECTED":
+        risk_increment = 20
+    else:
+        risk_increment = 5  # fallback default
+
+    # Make cumulative tracking
+    session = sessions_collection.find_one({"session_id": req.session_id})
+    current_risk = session.get("cumulative_risk", 0) if session else 0
+    new_risk = min(current_risk + risk_increment, 100)
+    
+    if session:
+        sessions_collection.update_one(
+            {"session_id": req.session_id},
+            {"$set": {"cumulative_risk": new_risk}}
+        )
+
+    # Status bounds based on new risk
+    if new_risk < 30:
+        status = "Normal"
+    elif new_risk < 60:
+        status = "Suspicious"
+    else:
+        status = "High Risk"
 
     event = {
         "session_id": req.session_id,
-        "face_count": 1, # Default assumption for non-camera events
+        "event_type": req.event_type,
+        "face_count": 1,
         "gaze_direction": "Forward",
         "head_pose": "Center",
         "phone_detected": False,
-        "risk_score": risk_score,
-        "status": "Suspicious",
+        "risk_score": new_risk,
+        "status": status,
         "reasons": [req.event_type],
         "image_path": None,
         "details": req.details,
@@ -111,4 +139,4 @@ async def log_event(req: BrowserEventReq):
 
     result = events_collection.insert_one(event)
     event["_id"] = str(result.inserted_id)
-    return {"status": "success", "event": event}
+    return {"status": "success", "event": event, "cumulative_risk": new_risk}

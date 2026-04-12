@@ -17,6 +17,8 @@ class ExamSession(BaseModel):
     start_time: datetime
     end_time: datetime | None = None
     status: str = "active" # "active" or "completed"
+    score: int | None = None
+    total_questions: int | None = None
 
 
 class AnalysisEvent(BaseModel):
@@ -26,3 +28,11 @@ class AnalysisEvent(BaseModel):
     risk_score: int
     status: str
     timestamp: datetime
+
+class Question(BaseModel):
+    subject: str
+    question: str
+    options: list[str]
+    answer: str
+    difficulty: str
+

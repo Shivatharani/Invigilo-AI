@@ -6,6 +6,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import StudentDashboard from "./pages/StudentDashboard";
+import SubjectSelection from "./pages/SubjectSelection";
 import { Toaster } from "react-hot-toast";
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/student-dashboard" element={<StudentDashboard />} />
+        <Route path="/select-subject" element={<SubjectSelection />} />
         <Route path="/student" element={<StudentExam />} />
         <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
